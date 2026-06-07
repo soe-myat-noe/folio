@@ -19,6 +19,7 @@ const scene = new THREE.Scene();
 let fans = []
 let robot = null
 let clockScreen = null
+let raycasterObjects = []
 
 
 //Clock Canvas Setup
@@ -74,6 +75,9 @@ scene.add(hemiLight);
 const dracoLoader = new DRACOLoader();
 dracoLoader.setDecoderPath("/draco/");
 
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
 
@@ -88,6 +92,11 @@ videoElement.play()
 
 const videoTexture = new THREE.VideoTexture(videoElement)
 videoTexture.colorSpace = THREE.SRGBColorSpace;
+
+window.addEventListener("mousemove", (e) => {
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
 
 //Load GLB
 loader.load('/models/portfolio.glb', (glb) => {
@@ -149,8 +158,11 @@ loader.load('/models/portfolio.glb', (glb) => {
      if (child.name.startsWith('pc_fan')) {
       fans.push(child)
     }
-
-    
+    // Raycasting
+    if (child.name.includes('raycaster')) {
+     raycasterObjects.push(child)
+    console.log('raycaster object found:', child.name)
+    }
 
     //Robot
     if (child.name === 'robot_raycaster_1') {
@@ -233,6 +245,31 @@ const render = () => {
   // Clock
   drawClock()
   clockTexture.needsUpdate = true
+
+  // Raycaster 
+  raycaster.setFromCamera(pointer, camera);
+  const intersects = raycaster.intersectObjects(raycasterObjects);
+
+  for (let i = 0; i < intersects.length; i++) {
+    const obj = intersects[i].object
+    if (!obj.userData.originalMaterial) {
+      obj.userData.originalMaterial = obj.material
+      obj.material = obj.material.clone()
+    }
+    obj.material.color.set(0xff0000)
+  }
+
+  if (intersects.length > 0) {
+    document.body.style.cursor = 'pointer'
+  } else {
+    document.body.style.cursor = 'default'
+    raycasterObjects.forEach(obj => {
+      if (obj.userData.originalMaterial) {
+        obj.material = obj.userData.originalMaterial
+        obj.userData.originalMaterial = null
+      }
+    })
+  }
 
   renderer.render(scene, camera);
   window.requestAnimationFrame(render);

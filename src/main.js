@@ -99,14 +99,14 @@ window.addEventListener("mousemove", (e) => {
 });
 
 //Load GLB
-loader.load('/models/portfolio.glb', (glb) => {
+loader.load('/models/portfolio_v2.glb', (glb) => {
   scene.add(glb.scene);
 
 
   //glass material
   const glassMaterial = new THREE.MeshPhysicalMaterial({
     transmission: 1,
-    thickness: 0.3,
+    thickness: 0.5,
     roughness: 0,
     metalness: 0,
     transparent: true,

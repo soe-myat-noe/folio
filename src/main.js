@@ -20,6 +20,7 @@ let fans = []
 let robot = null
 let clockScreen = null
 let raycasterObjects = []
+let currentIntersects = []
 
 
 //Clock Canvas Setup
@@ -77,6 +78,10 @@ dracoLoader.setDecoderPath("/draco/");
 
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
+const projectLinks = {
+  "Films": "https://youtube.com/playlist?list=PLZRxFBpswuA8TuAoWTyXW9CL3AYknXZbu&si=tCsvZ-rcY98pNg7y"
+}
+
 
 const loader = new GLTFLoader();
 loader.setDRACOLoader(dracoLoader);
@@ -96,6 +101,19 @@ videoTexture.colorSpace = THREE.SRGBColorSpace;
 window.addEventListener("mousemove", (e) => {
   pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
   pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
+});
+
+window.addEventListener("click", (e) => {
+  if(currentIntersects.length> 0){
+    const object = currentIntersects[0].object;
+
+    Object.entries(projectLinks). forEach(([key, url]) =>{
+      if (object.name.includes(key)){
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    })
+  }
+
 });
 
 //Load GLB
@@ -248,18 +266,18 @@ const render = () => {
 
   // Raycaster 
   raycaster.setFromCamera(pointer, camera);
-  const intersects = raycaster.intersectObjects(raycasterObjects);
+  currentIntersects = raycaster.intersectObjects(raycasterObjects);
 
-  for (let i = 0; i < intersects.length; i++) {
-    const obj = intersects[i].object
+  for (let i = 0; i < currentIntersects.length; i++) {
+    const obj = currentIntersects[i].object
     if (!obj.userData.originalMaterial) {
       obj.userData.originalMaterial = obj.material
       obj.material = obj.material.clone()
     }
-    obj.material.color.set(0xff0000)
   }
 
-  if (intersects.length > 0) {
+  if (currentIntersects.length > 0) {
+    const currentIntersectObject = currentIntersects[0].object
     document.body.style.cursor = 'pointer'
   } else {
     document.body.style.cursor = 'default'

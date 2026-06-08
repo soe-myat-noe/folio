@@ -172,7 +172,7 @@ loader.load('/models/portfolio_v2.glb', (glb) => {
     
 
     //Clock screen
-    if (child.name === 'screen_01_raycaster') {
+    if (child.name === 'screen_01') {
       clockScreen = child
       clockScreen.material = new THREE.MeshBasicMaterial({ map: clockTexture })
     }

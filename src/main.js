@@ -14,6 +14,8 @@ const sizes ={
 
 //Scene
 const scene = new THREE.Scene();
+// scene.background = new THREE.Color(0xf7f6f2)
+// scene.fog = new THREE.Fog( 0xcccccc, 15, 15 )
 
 // Objects 
 let fans = []
@@ -32,8 +34,12 @@ const clockTexture = new THREE.CanvasTexture(clockCanvas)
 clockTexture.flipY = false
 
 //Camera
+// const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 1000);
+// camera.position.set(10, 9, -9.5);
+// scene.add(camera);
+
 const camera = new THREE.PerspectiveCamera(35, sizes.width / sizes.height, 0.1, 1000);
-camera.position.set(10, 9, -9.5);
+camera.position.set(8, 18, 6);
 scene.add(camera);
 
 //Renderer
@@ -46,14 +52,20 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 
 
 
+
 //Controls
-const controls = new OrbitControls( camera, renderer.domElement );
-controls.enableDamping = true;
-controls.dampingFactor = 0.05;
-controls.minDistance = 5
+const controls = new OrbitControls(camera, renderer.domElement)
+
+controls.enableDamping = true
+controls.dampingFactor = 0.05
+
+controls.enableRotate = true
+controls.enableZoom = true
+controls.enablePan = false
+
+controls.minDistance = 3
 controls.maxDistance = 20
 controls.maxPolarAngle = Math.PI / 2
-controls.enablePan = false
 
 
 //Lighting
@@ -79,7 +91,7 @@ dracoLoader.setDecoderPath("/draco/");
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
 const projectLinks = {
-  "Films": "https://youtube.com/playlist?list=PLZRxFBpswuA8TuAoWTyXW9CL3AYknXZbu&si=tCsvZ-rcY98pNg7y"
+  "screen_02_raycaster_pointer": "https://youtube.com/playlist?list=PLZRxFBpswuA8TuAoWTyXW9CL3AYknXZbu&si=tCsvZ-rcY98pNg7y"
 }
 
 
@@ -171,7 +183,6 @@ loader.load('/models/portfolio_v2.glb', (glb) => {
       color: new THREE.Color(0xaaaaaa)
     })
     }
-
     //Fans
      if (child.name.startsWith('pc_fan')) {
       fans.push(child)
@@ -179,7 +190,7 @@ loader.load('/models/portfolio_v2.glb', (glb) => {
     // Raycasting
     if (child.name.includes('raycaster')) {
      raycasterObjects.push(child)
-    console.log('raycaster object found:', child.name)
+    // console.log('raycaster object found:', child.name)
     }
 
     //Robot
@@ -209,27 +220,76 @@ loader.load('/models/portfolio_v2.glb', (glb) => {
   //position camera based on the model size
   // camera.position.set(center.x + size.x, center.y + size.y, center.z + size.z * 2);
   camera.lookAt(center);
+
+  gsap.to(camera.position,{
+    x:10,
+    y:9,
+    z:-9.5,
+    duration:2.5,
+    ease:"power2.inOut"
+})
 })
 
-// Draw clock onto canvas
+// // Draw clock onto canvas
+// function drawClock() {
+//   const now = new Date()
+//   const w = 512, h = 512
+
+//   // Background
+//   ctx.fillStyle = '#000000'
+//   ctx.fillRect(0, 0, w, h)
+
+//   // Time
+//   const hours = String(now.getHours()).padStart(2, '0')
+//   const mins = String(now.getMinutes()).padStart(2, '0')
+//   const secs = String(now.getSeconds()).padStart(2, '0')
+
+//   ctx.fillStyle = '#ffffff'
+//   ctx.font = 'bold 80px monospace'
+//   ctx.textAlign = 'center'
+//   ctx.textBaseline = 'middle'
+//   ctx.fillText(`${hours}:${mins}:${secs}`, w / 2, h / 2)
+// }
+
 function drawClock() {
   const now = new Date()
-  const w = 512, h = 512
-
-  // Background
+  const w = 512, h= 512
+  
   ctx.fillStyle = '#000000'
   ctx.fillRect(0, 0, w, h)
 
-  // Time
+  //scan lines
+  ctx.fillStyle = '#050505'
+  for (let y = 0; y < h; y += 8) {
+    ctx.fillRect(0, y, w, 2)
+  }
+
   const hours = String(now.getHours()).padStart(2, '0')
   const mins = String(now.getMinutes()).padStart(2, '0')
   const secs = String(now.getSeconds()).padStart(2, '0')
 
+  const colon = now.getSeconds() % 2 === 0 ? ':' : ' '
+
   ctx.fillStyle = '#ffffff'
-  ctx.font = 'bold 80px monospace'
+  ctx.font = 'bold 86px monospace'
   ctx.textAlign = 'center'
   ctx.textBaseline = 'middle'
-  ctx.fillText(`${hours}:${mins}:${secs}`, w / 2, h / 2)
+  ctx.fillText(`${hours}${colon}${mins}`, w / 2, 210)
+
+  ctx.fillStyle = '#9f9f9f'
+  ctx.font = '28px monospace'
+  ctx.fillText(`${secs} SEC`, w / 2, 285)
+
+  ctx.fillStyle = '#ffffff'
+  ctx.font = '24px monospace'
+  ctx.fillText('ONLINE', w / 2, 350)
+
+  // small status dot
+  ctx.beginPath()
+  ctx.arc(190, 350, 7, 0, Math.PI * 2)
+  ctx.fillStyle = now.getSeconds() % 2 === 0 ? '#ffffff' : '#555555'
+  ctx.fill()
+  
 }
 
 //Resize

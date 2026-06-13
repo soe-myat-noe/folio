@@ -11,8 +11,61 @@ const sizes = {
   height: window.innerHeight
 }
 
+// Modals
+const modals = {
+  info:document.querySelector(".modal.info"),
+  projects:document.querySelector(".modal.projects"),
+  contact:document.querySelector(".modal.contact")
+};
+
+document.querySelectorAll(".modal-exit-button").forEach(button=>{
+  let touchHappened = false;
+
+  button.addEventListener(
+    "touchend", 
+    (e)=>{
+      touchHappened: true;
+      e.preventDefault();
+      const modal = e.target.closest(".modal");
+      hideModal(modal);
+    }, 
+    { passive:false }
+  );
+
+  button.addEventListener(
+    "click",
+    (e)=>{
+      if(touchHappened) return; 
+      e.preventDefault();
+      const modal = e.target.closest(".modal");
+      hideModal(modal);
+    }, 
+    { passive:false });
+  });
+
+const showModal = (modal) => {
+  modal.style.display = "block"
+  gsap.set(modal, { opacity: 0 });
+  gsap.to(modal, {
+    opacity: 1,
+    duration: 0.5,
+  });
+};
+
+const hideModal = (modal) => {
+  gsap.to(modal, {
+    opacity: 0,
+    duration: 0.5,
+    onComplete: () => {
+    modal.style.display = "none";
+    }
+  });
+};
+
+
 // Scene
 const scene = new THREE.Scene();
+// scene.background = new THREE.Color(0xFFFFFF)
 
 // Objects
 let fans = []
@@ -44,7 +97,7 @@ renderer.shadowMap.type = THREE.PCFShadowMap;
 // Controls
 const controls = new OrbitControls(camera, renderer.domElement)
 controls.enableDamping = true
-controls.dampingFactor = 0.05
+controls.dampingFactor = 0.03
 controls.enablePan = false
 controls.minDistance = 3
 controls.maxDistance = 20
@@ -112,16 +165,38 @@ window.addEventListener("mousemove", (e) => {
   pointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
 });
 
-window.addEventListener("click", () => {
+window.addEventListener("touchstart", (e) => {
+  e.preventDefault()
+  pointer.x = (e.touches[0].clientX / window.innerWidth) * 2 - 1;
+  pointer.y = -(e.touches[0].clientY / window.innerHeight) * 2 + 1;
+}, {passive: false});
+
+window.addEventListener("touchend", (e) => {
+  e.preventDefault()
+  handleRaycasterInteraction()
+}, {passive: false});
+
+function handleRaycasterInteraction(){
   if (currentIntersects.length > 0) {
     const object = currentIntersects[0].object;
     Object.entries(projectLinks).forEach(([key, url]) => {
       if (object.name.includes(key)) {
         window.open(url, '_blank', 'noopener,noreferrer');
       }
-    })
+    });
+
+    if (object.name.includes("plank_info")) {
+      showModal(modals.info)
+    }else if (object.name.includes("plank_projects")){
+      showModal(modals.projects)
+    }else if (object.name.includes("plank_contact")){
+      showModal(modals.contact)
+    }
+
   }
-});
+}
+
+window.addEventListener("click", handleRaycasterInteraction);
 
 // Load GLB
 loader.load('/models/portfolio_v2.glb', (glb) => {
